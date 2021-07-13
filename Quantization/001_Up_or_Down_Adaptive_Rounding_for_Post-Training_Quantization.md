@@ -1,6 +1,6 @@
 # Up or Down? Adaptive Rounding for Post-Training Quantization
 
-## Title 
+## 标题 
 * Title: Up or Down? Adaptive Rounding for Post-Training Quantization
 * Authors: Markus Nagel, Rana Ali Amjad, Mart van Baalen, Christos Louizos, Tijmen Blankevoort
 * Link https://arxiv.org/abs/2004.10568 
