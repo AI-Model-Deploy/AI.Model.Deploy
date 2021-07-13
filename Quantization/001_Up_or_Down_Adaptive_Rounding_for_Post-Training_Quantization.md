@@ -14,8 +14,7 @@
 8bit再降低到4-bit甚至到更低的2-bit，这里边遇到的挑战会大很多了。
 
 这是Qualcomm AI Research发表的一篇文章从Round的角度来分析量化误差，并提出了Adaptive Round的方法来对抗量化误差。从实验结果来看，当weights 量化
-到4-bit时，AdaRound和当前的一些方法相比有明显的优势。并且，论文中提到的方法也集成到Qualcomm开源项目[AIMET](https://github.com/quic/aimet)，
-感兴趣的同学可以动手试试。
+到4-bit时，AdaRound和当前的一些方法相比有明显的优势。并且，论文中提到的方法也集成到Qualcomm开源项目[AIMET](https://github.com/quic/aimet) 感兴趣的同学可以动手试试。
 
 ## 文章的核心点
 - 对Round带来的误差做了理论和定量的分析，分析Round对于最终task loss的影响。并且抽象成一个优化问题：
@@ -49,15 +48,37 @@
 N*N的矩阵。当然，在实际应用中，也有一些类似的近似解的求法，但在这里就不特别展开了。
 * 上面的优化问题是一个NP-hard问题。
 
-### 解决上述问题的方法
+### Adaround
+为了解决这个优化问题，文章中提出了adaround的方法。 首相，我们先对优化目标做了一些放松，从而提出了一种次优的优化目标,公式如下
+![](./assets/to_solve.PNG)
+其中Wx是指W和输入的矩阵乘法的结果，W'为量化后的权重。这样，问题就简化成如何寻找变量V,来使得量化前和量化后的输出之间L2尽量小。  
+文章中提出了一个soft量化的公式，如下
+![](./assets/soft_quantization.PNG)
+其中s为符号位， h(V)是一个V的函数，主要是想将V map到[0 ~ 1]的范围. 
+![](./assets/hv.PNG)
+h(V)的选择应该很多，需要满足可导的要求，并且输出范围在0,1之间。文章中是用的公式如上图所示，sigmoid函数作为主体。  
+这样，我们就能够使用神经网络训练的梯度下降的方法来给每一个Weight来找到对应的V，并且尽量保证优化目标最小。
+
+在一个多层的网络中，文章中采取逐层fine-tuning的方法来对每一层进行adaround的操作。 这样，非常有利于嵌入到post-training的工具里边，只需要获得
+full-precision的输出，以及量化后的网络的输出，就可以来train该层的V. 
 
 
-## 实验结果
-* Per-layer vs Per-channel 
-* 4-bit weights and 8-bit activation ， 为什么不是4w4a？
+### 实验结果
+文中的实验主要以Weight 4-bit为主，Activation有fp32和8-bit的quantization。
+对于Resnet50，在4-bit-weight，8-bit-activation的情况下，能够达到75.01%的top1，和全精度的76%相比，只有1%的drop，挺好的成绩。
+在小模型MobilenetV2上，能获得69.25%的top1，同样是非常不错的成绩。AdaRound方法的优势还是体现的比较好的。
+注意的是，这里的weight的量化是采用per-tensor的量化方式。如果Adaround配合per-channel的量化方式，Accuracy上会有一定的提升。  
+大家可能有疑问为什么没有4-bit-weight和4-bit-activation的结果，目前在post-training的方法中，还是非常难获得可用的accuracy。当然，如果在
+Mixed-precision的use case中，AdaRound也会有很好的应用前途。
 
+![](./assets/Results.PNG)
 
-## 总结
+## 个人的胡思乱想
+1. AdaRound是train了一个变量V来控制每一个individual的weights是往上还是往下Round。那么是否可以有类似的想法，用在Pruning上呢？
+2. AdaRound能否用在quantization-aware的training上？ Training中虽然可以用到STE，但是也会有Round的误差，是否可以用类似的方法来取代STE?
+3. Activaiton可以用这个方法吗？通常Activation的每次都会随着输入的变化而改变，但是否能发现某些区域的activation更偏向于round up，而某些区域更偏向于
+rounddown。如果这样的话，是否可以train V 来代表round up/down 的概率。
+
 
 
 
