@@ -39,10 +39,12 @@
 假设一个神经网络的权重为W，量化带来一个perturbation ${\Delta}$W, x, y 分别为模型的输入和对应的label。 L(x, y, w ) 代表的是模型的loss。
 我们希望L(x, y, w )和 L(x, y, w )的差距越小越好。 
 ![Loss from weight quantization](./assets/Loss_to_weight_perturbation.PNG)
+
 通过泰勒展开，我们能得到上面的公式，其中g(w)为一阶导，H(w)为Hessian矩阵 （Hessian矩阵在量化和Pruning的算法里边经常被用到）。
 泰勒展开里边高阶项被移除了，而且因为我们认为模型已经收敛，所以g(w)是一个很小的值，也可以被忽略掉，所以，最后我们只剩下二阶的展开项了。
 
 ![Optimization Target](./assets/OptimizationTarget.PNG)
+
 从优化的角度来看，我们要寻找最优的${\Delta}$W来使得上面的目标最小。 这里边有两个挑战：
 * Hessian矩阵的求解。Hessian矩阵理论上是可以求解的，但是所需要的计算的内存是一个特别夸张的数据。假设网络权重的个数是N,那Hessian是一个
 N*N的矩阵。当然，在实际应用中，也有一些类似的近似解的求法，但在这里就不特别展开了。
@@ -51,15 +53,19 @@ N*N的矩阵。当然，在实际应用中，也有一些类似的近似解的�
 ### Adaround
 为了解决这个优化问题，文章中提出了adaround的方法。 首相，我们先对优化目标做了一些放松，从而提出了一种次优的优化目标,公式如下
 ![](./assets/to_solve.PNG)
+
 其中Wx是指W和输入的矩阵乘法的结果，W'为量化后的权重。这样，问题就简化成如何寻找变量V,来使得量化前和量化后的输出之间L2尽量小。  
 文章中提出了一个soft量化的公式，如下
 ![](./assets/soft_quantization.PNG)
+
 其中s为符号位， h(V)是一个V的函数，主要是想将V map到[0 ~ 1]的范围. 
 ![](./assets/hv.PNG)
+
 h(V)的选择应该很多，需要满足可导的要求，并且输出范围在0,1之间。文章中是用的公式如上图所示，sigmoid函数作为主体。  
 这样，我们就能够使用神经网络训练的梯度下降的方法来给每一个Weight来找到对应的V，并且尽量保证优化目标最小。
 
 在一个多层的网络中，文章中采取逐层fine-tuning的方法来对每一层进行adaround的操作。 这样，非常有利于嵌入到post-training的工具里边，只需要获得
+full-precision的输出，以及量化后的网络的输出，就可以来train该层的V. 
 full-precision的输出，以及量化后的网络的输出，就可以来train该层的V. 
 
 
