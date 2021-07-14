@@ -37,7 +37,8 @@
 
 ### 动机（Motivation）
 假设一个神经网络的权重为W，量化带来一个perturbation ${\Delta}$W, x, y 分别为模型的输入和对应的label。 L(x, y, w ) 代表的是模型的loss。
-我们希望L(x, y, w )和 L(x, y, w )的差距越小越好。 
+我们希望L(x, y, w )和 L(x, y, w )的差距越小越好.
+
 ![Loss from weight quantization](./assets/Loss_to_weight_perturbation.PNG)
 
 通过泰勒展开，我们能得到上面的公式，其中g(w)为一阶导，H(w)为Hessian矩阵 （Hessian矩阵在量化和Pruning的算法里边经常被用到）。
@@ -52,10 +53,12 @@ N*N的矩阵。当然，在实际应用中，也有一些类似的近似解的�
 
 ### Adaround
 为了解决这个优化问题，文章中提出了adaround的方法。 首相，我们先对优化目标做了一些放松，从而提出了一种次优的优化目标,公式如下
+
 ![](./assets/to_solve.PNG)
 
 其中Wx是指W和输入的矩阵乘法的结果，W'为量化后的权重。这样，问题就简化成如何寻找变量V,来使得量化前和量化后的输出之间L2尽量小。  
 文章中提出了一个soft量化的公式，如下
+
 ![](./assets/soft_quantization.PNG)
 
 其中s为符号位， h(V)是一个V的函数，主要是想将V map到[0 ~ 1]的范围. 
