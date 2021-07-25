@@ -51,7 +51,7 @@
 
 PACT的公式如下，这里的alpha就是那个trainable clip threshold。
 
-![RELU6](./assets/formula.png)
+![RELU6](./assets/formula.PNG)
 
 同样，对于alpha的gradient为
 
