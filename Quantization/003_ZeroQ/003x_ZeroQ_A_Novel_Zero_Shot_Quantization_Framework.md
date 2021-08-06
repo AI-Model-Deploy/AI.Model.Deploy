@@ -9,15 +9,17 @@
 * Key words: Quantization, Mixed Precision Quantization,
 
 ## 问题介绍
-这是一篇来自CVPR2020的文章，主要是想解决 Mixed Quantization的两个痛点
-* 如何在缺少数据（train和val）的情况下，提升Quantization的精度
-* 如何给每一层分配最佳的量化bit，比如2-bit，4-bit和8-bit？
 
-这两个问题在实际的工程实践中会经常遇到。通常厂家实际部署的模型及数据涉及到IP，并不会share给第三方。
-极端情况下，你可能只有10几张sample。如此可怜的数据会让许多post-training quantization的方法都无所适从。
+通常大家遇到的量化都是统一的量化bit，常见的如activation和weights都是8-bit。这样确实对于AI芯片的设计来说，更友好一些。
+但是在真实的场景中，客户并不能完全接受量化带来的accuracy的drop。比如，你收到一个模型，一顿操作之后，最终量化到8-bit，accuracy相比原始模型下降了1%
+但是，客户并不满意，希望能够精度下降控制在0.1%。 例如mlperf就有对量化模型的精度损失要求。
 
+那这个时候，mixed quantization技术就有用武之地了。在 mixed quantization中，会选择一些模型量化到8-bit，其余的layer保持在原来的精度上。 又或者，
+大多数layer量化到8-bit，少部分的量化到4-bit，从而达到最佳的inference和accuracy的平衡。
 
-其次，第二个ZeroQ的亮点来自如何确定每一层的量化bit数。我们知道，一个网络中每一层对于最终的精度和对于量化误差的敏感程度是不一样的。
+ZeroQ是一篇来自CVPR2020的文章，想去解决 Mixed Quantization中遇到的两个痛点
+* 缺少数据（train和val）。通常厂家实际部署的模型及数据涉及到IP，并不会share给第三方。极端情况下，你可能只有10几张sample。如此可怜的数据会让许多post-training quantization的方法都无所适从。
+* 如何给每一层分配最佳的量化bit。我们知道，一个网络中每一层对于最终的精度和对于量化误差的敏感程度是不一样的。
 ZeroQ中定义了一个quantization sensitivity的指标，对于那些比较敏感的layer，那么我们会分配大的bit；而对于那些不敏感的layer，我们
 则会分配小的bit。通过这样的分配策略，保证在同样的压缩率的情况下，取得尽量高的精度。
 
@@ -26,8 +28,12 @@ ZeroQ中定义了一个quantization sensitivity的指标，对于那些比较敏
 
 ### 如何生成合格的val数据
 
-大家可以思考一下，如果给你一个模型，但是不给你任何输入数据，你会如何去“生成”合适的数据。ZeroQ中提到这个数据为"Distilled Data". 
-为什么称之为"Distilled Data"呢？ Knowledge Distillation是一个在网络训练和quantization经常被使用的一个技术。核心思想是利用
+大家可以思考一下，如果给你一个模型，但是不给你任何输入数据，你会如何去“生成”合适的数据。 这是一个开放的问题，可以有很多种解决办法。
+
+ZeroQ将这部分数据称之为"Distilled Data". 为什么称之为"Distilled Data"呢？ ZeroQ实质上是利用了Knowledge Distillation的思想来“训练”这个数据。
+这个听起来有点**不讲武德**。我们只听过训练模型的参数，没听过训练数据的。
+
+Knowledge Distillation是一个在网络训练和quantization经常被使用的一个技术。核心思想是利用
 一个teacher network来辅助来训练一个弱化或者小参数的student模型。在这里，teacher network就是你拿到的原始的full precision模型，
 而student network就是那个需要帮忙的量化模型。我们的目的是希望量化模型和full precision模型的inference结果尽量的一致。
 
