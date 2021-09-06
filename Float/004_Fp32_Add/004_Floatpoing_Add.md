@@ -32,6 +32,7 @@ dot product 的几种常见实现方法如下
 ![diff](./assets/diff.PNG)
 
 这里有一个你可以run的python case，大家可以去跑一下，自己检查一下输出结果. 这个例子可以直观的看到accumulation order对于精度的影响。
+
 ```python
 import numpy as np
 
