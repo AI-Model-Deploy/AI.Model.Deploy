@@ -55,11 +55,24 @@ print(f'{a+c+d+b} expected 0.0')
 Fp32 中有 1-bit的符号位 sign，8-bit的指数位 Exponent, 23-bit 的小数位 faction。
 ![fp32_format](./assets/fp32_format.PNG)
 
-下面就是FP32的计算公式， Bias在这里是127， F为小数部分。
+下面计算公式展示了如何从binary获取到fp32表示的value， Bias在这里是127， F为小数部分。
 ![fp32_format_2](./assets/fp32_format_2.PNG)
 ![fp32_format_3](./assets/fp32_format_3.PNG)
 
+一个具体的例子 b'1011111000100000000000000
 ![fp32_format_4](./assets/fp32_format_4.PNG) 
 
-
 ## FP32的加法实现。
+上面介绍了FP32的表示方法，那这里介绍FP32的加法实现。 Floating Point的计算电路FPU有很多的实现，在这里，我们只介绍了FP32加法的实现原理。
+
+假设我们做以下两个FP32的加法
+![add](./assets/add_a_b.PNG)
+
+在这里，significant部分不可以直接相加，因为Exponent不一样。 所以，我们将E=2的数字，进行 right shift 2-bit，再进行相加, 如下所示：
+![add_2](./assets/add_a_b_2.PNG)
+
+那么这里，significands部分会产生一个进位（carry bit）。此时，我们需要做一次 Normalization，增加Exponent，并 right shift 1-bit
+![add_3](./assets/add_a_b_3.PNG)
+
+经过right shift 之后，normalized results 总共有 25 bit。 我们需要转换到
+
