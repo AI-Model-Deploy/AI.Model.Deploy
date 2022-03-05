@@ -8,9 +8,9 @@ AI芯片性能比较常用指标一般都可归结于PPA(Power-Performance-Area)
 那这种转变也使得AI芯片的设计，不但要从peak performance的考虑，也要关注如何提升重要workload运行的效率。
 影响Workload在芯片上的运行效率的因素有很多
 * 来自Workload，比如MobilenetV2这样的简约模型，计算密集度较低，很多 depth conv layer都是memory bound。那么运行MobilenetV2，在一个计算能力很强，但是带宽受限的硬件上，整体效率并不会太高。
-  如果大家关注[MLPERF]()的提交结果，涵盖了如BERT, Resent50，3D-UNET, DLRM等主流模型，很少有厂商会提供所有模型的结果。目前Nvidia GPU应该是提交中cover模型最多的，充分证明了GPU强大的适用性。
+  如果大家关注[MLPERF](https://mlcommons.org/en/inference-datacenter-11/)的提交结果，涵盖了如BERT, Resent50，3D-UNET, DLRM等主流模型，很少有厂商会提供所有模型的结果。目前Nvidia GPU应该是提交中cover模型最多的，充分证明了GPU强大的适用性。
   技术上来说，想在不同类型模型上都取得好的名次，是非常挑战的，不仅需要非常多的工程优化，而且硬件的设计要综合考量这些因素。
-* 来自软件的overhead，AI软件stack，一般包括了Compiler，runtime，firmware等模块，这些模块的效率都将影响应用的最终性能。以Compiler来说，它需要尽可能的将模型转换成硬件友好的low level graph，并尽可能的利用硬件的能力。但是这里遇到的挑战也是非常多。 关于AI graph compiler大家可以去关注[TVM]()和[MLIR]()相关的技术讨论。
+* 来自软件的overhead，AI软件stack，一般包括了Compiler，runtime，firmware等模块，这些模块的效率都将影响应用的最终性能。以Compiler来说，它需要尽可能的将模型转换成硬件友好的low level graph，并尽可能的利用硬件的能力。但是这里遇到的挑战也是非常多。 关于AI graph compiler大家可以去关注[TVM]()和[MLIR](https://mlir.llvm.org/)相关的技术讨论。
 * 来自硬件的设计落后于应用、算法的迭代。深度学习的算法在持续的高速的进化，从早期的GoogleNet，Resnet，再到最近的Vision Transformer的网络结构，
   可能导致硬件在设计的阶段，是能高效支持主流的模型，但是，当其推上市场的时候，如果大部分应用已经进化到新的模型结构时，那未必能很好适配新的硬件。
   这部分没法被应用高效利用的现象，有一个称号：dark silicion。
@@ -20,10 +20,10 @@ AI芯片性能比较常用指标一般都可归结于PPA(Power-Performance-Area)
 
 ## Roofline Modeling
 
-AI芯片的raw peformance是非常容易计算的。相对来说，对AI芯片针对某个应用而做的**定量性能**分析要更挑战一些。比较通用的方法是 Roofline Modeling。
+AI芯片的raw peformance是非常容易计算的。相对来说，对AI芯片针对某个应用而做的**定量性能**分析要更挑战一些。一种相对简单但非常使用的方法就是Roofline Modeling。
 
-Roofline模型, 是一种面向throughput的一种性能模型，代表的是应用在计算平台的**算力**和**带宽**这两个指标限制下所能达到的理论性能上界。 这篇文章的大多数内容来自
-[Roofline and TPU Performance](cs217)和[Roofline Performance Modeling for HPC and Deep Learning Applications](https://crd.lbl.gov/assets/Uploads/S21565-Roofline-1-Intro.pdf)这两篇paper，有兴趣的话，大家可以进一步精读里边的内容。这里，我们对Roofline Modeling做一个简单的介绍和总结。
+Roofline模型, 是一种面向throughput的一种性能模型，代表的是某个应用在硬件平台**算力**和**带宽**这两个指标约束下所能达到的理论性能上界。 这篇文章的大多数内容来自
+[Roofline and TPU Performance](https://cs217.stanford.edu/)和[Roofline Performance Modeling for HPC and Deep Learning Applications](https://crd.lbl.gov/assets/Uploads/S21565-Roofline-1-Intro.pdf)这两篇paper。有兴趣的话，大家可以进一步精读里边的内容。这里，我们对Roofline Modeling做一个简单的介绍。
 
 * 图的Y轴为 可达到的Flop/s = Min（peak Flops， Arithmetic Intensity * peak bandwidth）
 * 图的X轴为 计算的密集度（Arithmetic Intensity) Flops/Bytes, 这个值越高，代表运算的需求越高。
